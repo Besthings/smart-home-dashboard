@@ -1,0 +1,92 @@
+@import "tailwindcss";
+@import "./styles/animations.css";
+
+/* Prevent white flash on page load */
+html,
+body {
+  background-color: #0f172a; /* slate-900 */
+  color: #ffffff;
+}
+
+/* Custom Font - Ekachon Light */
+@font-face {
+  font-family: 'Ekachon';
+  src: url('/fonts/ekachon-light.woff') format('woff');
+  font-weight: 300;
+  font-display: swap; /* Ensures text remains visible during font load */
+}
+
+/* Apply custom font globally with fallback chain */
+body {
+  font-family: 'Ekachon', -apple-system, BlinkMacSystemFont, 'Segoe UI', 
+               'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 
+               'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth scroll behavior for navigation */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Respect user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Keyboard Focus Indicators - Visible and Accessible */
+/* Remove default outline and add custom focus styles */
+*:focus {
+  outline: none;
+}
+
+/* Custom focus ring for interactive elements */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 2px solid #06b6d4; /* cyan-500 */
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/* Focus styles for links in navigation */
+nav a:focus-visible {
+  outline: 2px solid #06b6d4;
+  outline-offset: 2px;
+}
+
+/* Focus styles for cards and interactive containers */
+[role="img"]:focus-visible,
+.sensor-card:focus-visible {
+  outline: 2px solid #06b6d4;
+  outline-offset: 4px;
+}
+
+/* Ensure focus is visible on toast notifications */
+[role="alert"]:focus-visible {
+  outline: 2px solid #06b6d4;
+  outline-offset: 2px;
+}
+
+/* Toast animation */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
