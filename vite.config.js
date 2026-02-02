@@ -7,4 +7,15 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: {
+    // Disable inline scripts for CSP compliance
+    assetsInlineLimit: 0,
+    cssCodeSplit: true,
+    rollupOptions: {
+      output: {
+        // Ensure no inline scripts
+        inlineDynamicImports: false,
+      }
+    }
+  }
 })
