@@ -157,12 +157,11 @@ export default function GaugeChart({
           y={config.height / 2}
           textAnchor="middle"
           dominantBaseline="middle"
-          className="transform rotate-90"
+          transform={`rotate(90, ${config.width / 2}, ${config.height / 2})`}
           style={{
             fontSize: config.fontSize,
             fontWeight: 'bold',
-            fill: '#f8fafc',
-            transformOrigin: 'center'
+            fill: '#f8fafc'
           }}
         >
           {value !== null && value !== undefined ? value.toFixed(1) : '--'}
@@ -175,11 +174,10 @@ export default function GaugeChart({
             y={config.height / 2 + (size === 'xl' ? 28 : size === 'lg' ? 24 : size === 'md' ? 20 : 16)}
             textAnchor="middle"
             dominantBaseline="middle"
-            className="transform rotate-90"
+            transform={`rotate(90, ${config.width / 2}, ${config.height / 2})`}
             style={{
               fontSize: config.labelSize,
-              fill: '#cbd5e1',
-              transformOrigin: 'center'
+              fill: '#cbd5e1'
             }}
           >
             {unit}

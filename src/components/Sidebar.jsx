@@ -96,20 +96,21 @@ const Sidebar = () => {
       <aside
         ref={sidebarRef}
         className={`
-          fixed top-0 left-0 h-screen w-64 bg-slate-800 border-r border-slate-700
+          fixed top-0 left-0 h-[100dvh] w-64 bg-slate-800 border-r border-slate-700
           flex flex-col transition-transform duration-300 ease-in-out z-40
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           md:translate-x-0
+          pb-safe
         `}
       >
         {/* Header */}
-        <div className="p-6 border-b border-slate-700">
+        <div className="p-6 border-b border-slate-700 flex-shrink-0">
           <h1 className="text-xl font-bold text-cyan-400 md:ml-0 ml-12">Smart Home</h1>
           <p className="text-sm text-slate-400 mt-1 md:ml-0 ml-12">Dashboard</p>
         </div>
 
         {/* Navigation Menu */}
-        <nav className="flex-1 p-4 space-y-2" role="navigation" aria-label="Main navigation">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto" role="navigation" aria-label="Main navigation">
           <Link
             to="/dashboard"
             className={`
@@ -145,7 +146,7 @@ const Sidebar = () => {
         </nav>
 
         {/* User Profile Section */}
-        <div className="p-4 border-t border-slate-700">
+        <div className="p-4 border-t border-slate-700 flex-shrink-0">
           {currentUser ? (
             <div className="space-y-3">
               {/* User Info */}
