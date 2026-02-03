@@ -31,9 +31,15 @@ function DashboardPage() {
     },
     system: {
       voltage: null,
-      esp32_uptime_sec: null
+      esp32_uptime_sec: null,
+      is_connected: false,
+      last_update: null
     }
   });
+
+  const [isESP32Connected, setIsESP32Connected] = useState(false);
+  const lastUpdateTimeRef = useRef(null);
+  const lastUpdateCheckRef = useRef(Date.now());
 
   const [loading, setLoading] = useState(true);
   const [dataUpdated, setDataUpdated] = useState(false);
@@ -77,6 +83,29 @@ function DashboardPage() {
           system: data.system || prevDataRef.current?.system || sensorData.system
         };
         
+        // ตรวจสอบการเชื่อมต่อ ESP32
+        // ใช้วิธีเช็คว่า last_update เปลี่ยนแปลงหรือไม่
+        const lastUpdate = newData.system.last_update || 0;
+        
+        // ถ้า last_update เปลี่ยน = ESP32 ยังส่งข้อมูลอยู่
+        if (lastUpdate !== lastUpdateTimeRef.current && lastUpdate > 0) {
+          lastUpdateTimeRef.current = lastUpdate;
+          lastUpdateCheckRef.current = Date.now();
+          setIsESP32Connected(true);
+        }
+        
+        console.log('Connection Check:', {
+          lastUpdate,
+          lastUpdateTimeRef: lastUpdateTimeRef.current,
+          is_connected: newData.system.is_connected,
+          isESP32Connected
+        });
+        
+        // ถ้า disconnect ให้รีเซ็ต uptime
+        if (!isESP32Connected && newData.system.esp32_uptime_sec !== null && newData.system.esp32_uptime_sec > 0) {
+          newData.system.esp32_uptime_sec = 0;
+        }
+        
         // Trigger pulse animation on data update
         setDataUpdated(true);
         setTimeout(() => setDataUpdated(false), 1000);
@@ -106,6 +135,11 @@ function DashboardPage() {
               showWarning(`🚨 ${sensor.label} - Intrusion detected!`);
             }
           });
+          
+          // ESP32 Disconnection alert
+          if (!isESP32Connected && prevDataRef.current.system.is_connected) {
+            showWarning('⚠️ ESP32 disconnected!');
+          }
         }
         
         setSensorData(newData);
@@ -117,11 +151,34 @@ function DashboardPage() {
       setLoading(false);
     });
 
+    // ตรวจสอบว่า ESP32 หยุดส่งข้อมูลหรือไม่ (ทุก 3 วินาที)
+    const connectionCheckInterval = setInterval(() => {
+      const now = Date.now();
+      const timeSinceLastUpdate = now - lastUpdateCheckRef.current;
+      
+      // ถ้าไม่มีการอัพเดทมานานกว่า 10 วินาที
+      if (isESP32Connected && timeSinceLastUpdate > 10000) {
+        console.log('ESP32 Disconnected - No updates for', timeSinceLastUpdate, 'ms');
+        setIsESP32Connected(false);
+        showWarning('⚠️ ESP32 disconnected!');
+        
+        // รีเซ็ต uptime
+        setSensorData(prev => ({
+          ...prev,
+          system: {
+            ...prev.system,
+            esp32_uptime_sec: 0
+          }
+        }));
+      }
+    }, 3000);
+
     // Cleanup function
     return () => {
       unsubscribe();
+      clearInterval(connectionCheckInterval);
     };
-  }, [showError, showWarning]);
+  }, [showError, showWarning, isESP32Connected]);
 
   if (loading) {
     return (
@@ -310,12 +367,14 @@ function DashboardPage() {
               <div>
                 <p className="text-slate-500 text-xs mb-1">ESP32 Uptime</p>
                 <div className="text-2xl sm:text-3xl font-mono font-bold text-cyan-400">
-                  {sensorData.system.esp32_uptime_sec !== null ? (
+                  {sensorData.system.esp32_uptime_sec !== null && isESP32Connected ? (
                     <>
                       <AnimatedValue value={Math.floor(sensorData.system.esp32_uptime_sec / 3600)} decimals={0} />h{' '}
                       <AnimatedValue value={Math.floor((sensorData.system.esp32_uptime_sec % 3600) / 60)} decimals={0} />m
                     </>
-                  ) : '--'}
+                  ) : (
+                    <span className="text-slate-500">--</span>
+                  )}
                 </div>
               </div>
 
@@ -323,16 +382,26 @@ function DashboardPage() {
               <div>
                 <p className="text-slate-500 text-xs mb-1">Connection</p>
                 <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${dataUpdated ? 'bg-green-400 pulse-fast' : 'bg-green-400 animate-pulse'}`}></div>
-                  <span className="text-green-400 font-semibold">Connected</span>
+                  <div className={`w-3 h-3 rounded-full ${
+                    isESP32Connected 
+                      ? (dataUpdated ? 'bg-green-400 pulse-fast' : 'bg-green-400 animate-pulse')
+                      : 'bg-red-500'
+                  }`}></div>
+                  <span className={`font-semibold ${isESP32Connected ? 'text-green-400' : 'text-red-500'}`}>
+                    {isESP32Connected ? 'Connected' : 'Disconnected'}
+                  </span>
                 </div>
               </div>
 
-              {/* Memory Status (placeholder) */}
+              {/* System Health */}
               <div>
                 <p className="text-slate-500 text-xs mb-1">System Health</p>
-                <div className="inline-block px-3 py-1 rounded-full text-xs sm:text-sm font-semibold bg-green-500/20 text-green-400 border border-green-500/50">
-                  Healthy
+                <div className={`inline-block px-3 py-1 rounded-full text-xs sm:text-sm font-semibold ${
+                  isESP32Connected 
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/50'
+                    : 'bg-red-500/20 text-red-400 border border-red-500/50'
+                }`}>
+                  {isESP32Connected ? 'Healthy' : 'Offline'}
                 </div>
               </div>
             </div>
